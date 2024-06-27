@@ -10,6 +10,9 @@
     "email": "niklaus.lee@gmail.com",
     "url": "https://github.com/niklauslee"
   },
+  "scripts": {
+    "sync": "cp -rf . ~/Library/Application\\ Support/StarUML/extensions/user/staruml.xmi"
+  },
   "license": "MIT",
   "engines": {
     "staruml": ">=3.0.0"

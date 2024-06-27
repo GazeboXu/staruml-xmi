@@ -521,6 +521,13 @@ reader.elements['uml:Association'] = function (node) {
   json['_type'] = 'UMLAssociation'
   var _ends = reader.readElementArray(node, 'ownedEnd')
   var _endRefs = reader.readRefArray(node, 'memberEnd')
+  // gazebo fix simple memberEnd ref
+  if(_endRefs.length == 0) {
+    var _endRefsStr = reader.readString(node, 'memberEnd')
+    _endRefsStr.split(' ').forEach(function(value) {
+      _endRefs.push({ '$ref': value })
+    });
+  }
   if (_ends && _ends.length >= 2) {
     _ends[0]._type = 'UMLAssociationEnd'
     _ends[1]._type = 'UMLAssociationEnd'

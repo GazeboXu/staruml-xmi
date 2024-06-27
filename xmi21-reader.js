@@ -330,6 +330,7 @@ function loadFromFile (filename) {
   // Parse XMI
   var parser = new DOMParser()
   var dom = parser.parseFromString(data, 'text/xml')
+  // gazebo XMI --> xmi:XMI
   var XMINode = dom.getElementsByTagName('xmi:XMI')[0]
 
   // Read top-level elements
