@@ -287,7 +287,7 @@ reader.elements['uml:Property'] = function (node) {
   json['aggregation'] = reader.readEnum(node, 'aggregation', 'uml:AggregationKind', type.UMLAttribute.AK_NONE)
   json['defaultValue'] = reader.readElement(node, 'defaultValue') || ''
   // Read as an AssociationEnd
-  json['navigable'] = reader.readBoolean(node, 'isNavigable', false)
+  json['navigable'] = reader.readBoolean(node, 'isNavigable', false) // gazebo this statement is useless, UML XMI hasn't the isNavigable attribute
   json['qualifiers'] = reader.readElementArray(node, 'qualifier') || []
   return json
 }
@@ -528,29 +528,61 @@ reader.elements['uml:Association'] = function (node) {
       _endRefs.push({ '$ref': value })
     });
   }
-  if (_ends && _ends.length >= 2) {
-    _ends[0]._type = 'UMLAssociationEnd'
-    _ends[1]._type = 'UMLAssociationEnd'
-    _ends[0].reference = _ends[0].type
-    _ends[1].reference = _ends[1].type
-    var _agg = _ends[0].aggregation
-    _ends[0].aggregation = _ends[1].aggregation
-    _ends[1].aggregation = _agg
-    json['end1'] = _ends[0]
-    json['end2'] = _ends[1]
-  } else if (_ends && _ends.length === 1) {
-    _ends[0]._type = 'UMLAssociationEnd'
-    _ends[0].reference = _ends[0].type
-    json['end1'] = _ends[0]
-    if (_endRefs && _endRefs.length > 0) {
-      json['end2'] = _endRefs[0]
-    }
-  } else {
-    if (_endRefs && _endRefs.length >= 2) {
+
+  // if (_ends && _ends.length >= 2) {
+  //   _ends[0]._type = 'UMLAssociationEnd'
+  //   _ends[1]._type = 'UMLAssociationEnd'
+  //   _ends[0].reference = _ends[0].type
+  //   _ends[1].reference = _ends[1].type
+  //   var _agg = _ends[0].aggregation
+  //   _ends[0].aggregation = _ends[1].aggregation
+  //   _ends[1].aggregation = _agg
+  //   json['end1'] = _ends[0]
+  //   json['end2'] = _ends[1]
+  // } else if (_ends && _ends.length === 1) {
+  //   _ends[0]._type = 'UMLAssociationEnd'
+  //   _ends[0].reference = _ends[0].type
+  //   json['end1'] = _ends[0]
+  //   if (_endRefs && _endRefs.length > 0) {
+  //     json['end2'] = _endRefs[0]
+  //   }
+  // } else {
+  //   if (_endRefs && _endRefs.length >= 2) {
+  //     json['end1'] = _endRefs[0]
+  //     json['end2'] = _endRefs[1]
+  //   }
+  // }
+  // gazebo handle navigable of association
+  // !no aggregation switch
+  if ((_ends && _ends.length >= 2) || (!_ends || _ends.length == 0)) {
+    if(_ends && _ends.length >= 2) {
+      // actually, this case is bi-navigable, just ignore it
+      _ends[0]._type = 'UMLAssociationEnd'
+      _ends[1]._type = 'UMLAssociationEnd'
+      _ends[0].reference = _ends[0].type
+      _ends[1].reference = _ends[1].type
+      var _agg = _ends[0].aggregation
+      _ends[0].aggregation = _ends[1].aggregation
+      _ends[1].aggregation = _agg
+      json['end1'] = _ends[0]
+      json['end2'] = _ends[1]
+    } else {
       json['end1'] = _endRefs[0]
       json['end2'] = _endRefs[1]
     }
+  } else {
+    _ends[0]._type = 'UMLAssociationEnd'
+    _ends[0].reference = _ends[0].type
+    _ends[0].navigable = false // assocation ownedEnd is not navigable
+    if(_ends[0]._id == _endRefs[0].$ref) {
+      json['end1'] = _ends[0]
+      json['end2'] = _endRefs[1]
+    } else {
+      json['end2'] = _ends[0]
+      json['end1'] = _endRefs[0]
+    }
   }
+
   return json
 }
 
@@ -1277,27 +1309,56 @@ reader.postprocessors.push(function (elem) {
   }
 })
 
+// gazebo refact
+function processAssociationEnd(elem, endKey) {
+  let elemEnd = elem[endKey]
+  if (elemEnd && elemEnd.$ref) {
+    elemEnd = reader.get(elemEnd.$ref)
+    var parent1 = reader.get(elemEnd._parent.$ref)
+    parent1.attributes = parent1.attributes.filter(e => e !== elemEnd)
+    elemEnd._type = 'UMLAssociationEnd'
+    elemEnd._parent = { '$ref': elem._id }
+    elemEnd.navigable = false
+    elemEnd.reference = elemEnd.type
+    elem[endKey] = elemEnd
+    return true
+  }
+  return false
+}
+
 // process 'memberEnd' of Association
 reader.postprocessors.push(function (elem) {
   if (app.metamodels.isKindOf(elem._type, 'UMLAssociation')) {
-    if (elem.end1 && elem.end1.$ref) {
-      elem.end1 = reader.get(elem.end1.$ref)
-      var parent1 = reader.get(elem.end1._parent.$ref)
-      parent1.attributes = parent1.attributes.filter(e => e !== elem.end1)
-      elem.end1._type = 'UMLAssociationEnd'
-      elem.end1._parent = { '$ref': elem._id }
-      elem.end1.navigable = false
-      elem.end1.reference = elem.end1.type
+    // gazebo
+    let end1 = processAssociationEnd(elem, "end1")
+    let end2 = processAssociationEnd(elem, "end2")
+    // I don't think the aggregation shoule be switched, the original secmantic is correct, but StarUML has wrong visualization
+    // let ag = elem.end1.aggregation
+    // elem.end1.aggregation = elem.end2.aggregation
+    // elem.end2.aggregation = ag
+    if (end1 && !end2) {
+      elem.end1.navigable = true
+    } else if (!end1 && end2) {
+      elem.end2.navigable = true
     }
-    if (elem.end2 && elem.end2.$ref) {
-      elem.end2 = reader.get(elem.end2.$ref)
-      var parent2 = reader.get(elem.end2._parent.$ref)
-      parent2.attributes = parent2.attributes.filter(e => e !== elem.end2)
-      elem.end2._type = 'UMLAssociationEnd'
-      elem.end2._parent = { '$ref': elem._id }
-      elem.end2.navigable = false
-      elem.end2.reference = elem.end2.type
-    }
+    // if (elem.end1 && elem.end1.$ref) {
+    //   elem.end1 = reader.get(elem.end1.$ref)
+    //   var parent1 = reader.get(elem.end1._parent.$ref)
+    //   parent1.attributes = parent1.attributes.filter(e => e !== elem.end1)
+    //   elem.end1._type = 'UMLAssociationEnd'
+    //   elem.end1._parent = { '$ref': elem._id }
+    //   elem.end1.navigable = false
+    //   elem.end1.reference = elem.end1.type
+    // }
+    // if (elem.end2 && elem.end2.$ref) {
+    //   elem.end2 = reader.get(elem.end2.$ref)
+    //   var parent2 = reader.get(elem.end2._parent.$ref)
+    //   parent2.attributes = parent2.attributes.filter(e => e !== elem.end2)
+    //   elem.end2._type = 'UMLAssociationEnd'
+    //   elem.end2._parent = { '$ref': elem._id }
+    //   elem.end2.navigable = false
+    //   elem.end2.reference = elem.end2.type
+    // }
   }
 })
 
