@@ -554,6 +554,21 @@ reader.elements['uml:Association'] = function (node) {
   // }
   // gazebo handle navigable of association
   // !no aggregation switch
+  if (app.preferences.get("java.import.association.ignore-name")) {
+    delete json["name"]
+  }
+  _ends.forEach(function(end) {
+    if (app.preferences.get("java.import.association.ignore-dummy-role-name")) {
+      delete end["name"]
+    }
+    if (app.preferences.get("java.import.association.ignore-ordered")) {
+      delete end["isOrdered"]
+    }
+    if (app.preferences.get("java.import.association.ignore-readonly")) {
+      delete end["isReadOnly"]
+    }
+  })
+
   if ((_ends && _ends.length >= 2) || (!_ends || _ends.length == 0)) {
     if(_ends && _ends.length >= 2) {
       // actually, this case is bi-navigable, just ignore it
@@ -1340,6 +1355,14 @@ reader.postprocessors.push(function (elem) {
       elem.end1.navigable = true
     } else if (!end1 && end2) {
       elem.end2.navigable = true
+    }
+    if (app.preferences.get("java.import.ignore-ordered")) {
+      delete elem.end1["isOrdered"]
+      delete elem.end2["isOrdered"]
+    }
+    if (app.preferences.get("java.import.ignore-readonly")) {
+      delete elem.end1["isReadOnly"]
+      delete elem.end2["isReadOnly"]
     }
     // if (elem.end1 && elem.end1.$ref) {
     //   elem.end1 = reader.get(elem.end1.$ref)
