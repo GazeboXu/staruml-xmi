@@ -31,11 +31,13 @@ const XMI_FILE_FILTERS = [
   {name: 'All Files', extensions: ['*']}
 ]
 
-function _handleXMI21Import (fullPath) {
+// gazebo
+// in 6.1.2 app.dialogs.showOpenDialog changed to async
+async function _handleXMI21Import (fullPath) {
   if (fullPath) {
     xmi21reader.loadFromFile(fullPath)
   } else {
-    var files = app.dialogs.showOpenDialog('Select a XMI File (.xmi)', null, XMI_FILE_FILTERS)
+    var files = await app.dialogs.showOpenDialog('Select a XMI File (.xmi)', null, XMI_FILE_FILTERS)
     if (files && files.length > 0) {
       try {
         xmi21reader.loadFromFile(files[0])
