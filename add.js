@@ -6,7 +6,7 @@ const Fuse = require('fuse.js')
 
 
 var oldSearch;
-var oldOpenDiagram;
+var oldSetCurrentDiagram;
 
 var diagramHistory = [];
 var diagramIndex = -1;
@@ -17,9 +17,17 @@ async function _handleSelectDiagramInExplorer () {
 
 function changeNavigateMenuState() {
     app.menu.updateStates(null, {
-        "xmi:navigate.back": isNavigateBackEnabled(),
-        "xmi:navigate.forward": isNavigateForwardEnabled()
+        'xmi:navigate.back': isNavigateBackEnabled(),
+        'xmi:navigate.forward': isNavigateForwardEnabled(),
+        'xmi:navigate.clean': isNavigateBackEnabled() || isNavigateForwardEnabled()
     }, null);
+
+    if (app.preferences.get("gxmi.general.debug")) {
+        console.log('diagramIndex=', diagramIndex);
+        for (let i=0; i<diagramHistory.length; i++) {
+            console.log(`${i == diagramIndex ? '->': ''}${diagramHistory[i].name}`)
+        }
+    }
 }
 
 function isNavigateBackEnabled() {
@@ -29,8 +37,8 @@ function isNavigateBackEnabled() {
 function _handleNavigateBack() {
     if (isNavigateBackEnabled()) {
         diagramIndex--;
-        oldOpenDiagram.call(app.diagrams, diagramHistory[diagramIndex]);
-        app.diagrams.setCurrentDiagram(diagramHistory[diagramIndex], false);
+        app.diagrams.openDiagram(diagramHistory[diagramIndex]);
+        oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
         changeNavigateMenuState();
     }
 }
@@ -42,31 +50,42 @@ function isNavigateForwardEnabled() {
 function _handleNavigateForward() {
     if (isNavigateForwardEnabled()) {
         diagramIndex++;
-        oldOpenDiagram.call(app.diagrams, diagramHistory[diagramIndex]);
-        app.diagrams.setCurrentDiagram(diagramHistory[diagramIndex], false);
+        app.diagrams.openDiagram(diagramHistory[diagramIndex]);
+        oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
         changeNavigateMenuState();
     }
+}
+
+function _handleNavigateClean() {
+    diagramHistory = [];
+    diagramIndex = -1;
+    changeNavigateMenuState();
 }
 
 function init () {
     app.commands.register('xmi:diagram.select-in-explorer', _handleSelectDiagramInExplorer)
     app.commands.register('xmi:navigate.back', _handleNavigateBack)
     app.commands.register('xmi:navigate.forward', _handleNavigateForward)
+    app.commands.register('xmi:navigate.clean', _handleNavigateClean)
 
     oldSearch = Object.getPrototypeOf(app.repository).search;
     Object.getPrototypeOf(app.repository).search = searchPrioritized;
 
-    oldOpenDiagram = Object.getPrototypeOf(app.diagrams).openDiagram;
-    Object.getPrototypeOf(app.diagrams).openDiagram = openDiagram;
+    oldSetCurrentDiagram = Object.getPrototypeOf(app.diagrams).setCurrentDiagram;
+    Object.getPrototypeOf(app.diagrams).setCurrentDiagram = setCurrentDiagram;
 }
 
-function openDiagram(diagram) {
-    oldOpenDiagram.call(app.diagrams, diagram);
-    diagramIndex++;
-    if (diagramIndex > 0) {
-        diagramHistory = diagramHistory.slice(0, diagramIndex)
+function setCurrentDiagram(diagram, skipEvent) {
+    oldSetCurrentDiagram.call(app.diagrams, diagram, skipEvent);
+    if (diagram) {
+        diagramIndex++;
+        if (!(diagramHistory.length > diagramIndex && diagramHistory[diagramIndex]._id == diagram._id)) { // 如果与历史相同
+            if (diagramIndex > 0) {
+                diagramHistory = diagramHistory.slice(0, diagramIndex)
+            }
+            diagramHistory.push(diagram);
+        }
     }
-    diagramHistory.push(diagram);
     changeNavigateMenuState();
 }
 
@@ -74,11 +93,11 @@ function searchPrioritized(keyword, typeFilter) {
     keyword = keyword.toLowerCase();
     typeFilter = typeFilter || type.Element;
     var results = this.findAll((elem) => {
-      var name = elem.name ? elem.name.toLowerCase() : "";
+      var name = elem.name ? elem.name.toLowerCase() : '';
       return name.indexOf(keyword) > -1 && elem instanceof typeFilter;
     });
     const fuse = new Fuse(results, {
-      keys: ["name"],
+      keys: ['name'],
       includeScore: true,
       threshold: 0.5
     });

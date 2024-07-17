@@ -6,45 +6,55 @@
         "text": "XMI Importer",
         "type": "section"
       },
-      "java.import.association.ignore-name": {
+      "gxmi.import.association.ignore-name": {
         "text": "Ignore Association Name",
         "description": "Ignore Association Name",
         "type": "check",
         "default": false
       },
-      "java.import.association.ignore-dummy-role-name": {
+      "gxmi.import.association.ignore-dummy-role-name": {
         "text": "Ignore Dummy Role Name",
         "description": "Ignore Dummy Role Name",
         "type": "check",
         "default": false
       },
-      "java.import.association.ignore-ordered": {
+      "gxmi.import.association.ignore-ordered": {
         "text": "Ignore Association op Ordered",
         "description": "Ignore Association op Ordered",
         "type": "check",
         "default": false
       },
-      "java.import.association.ignore-readonly": {
+      "gxmi.import.association.ignore-readonly": {
         "text": "Ignore Association op Readonly",
         "description": "Ignore Association op Readonly",
         "type": "check",
         "default": false
       },
-      "java.import.ignore-ordered": {
+      "gxmi.import.ignore-ordered": {
         "text": "Ignore Ordered",
         "description": "Ignore Ordered",
         "type": "check",
         "default": false
       },
-      "java.import.ignore-readonly": {
+      "gxmi.import.ignore-readonly": {
         "text": "Ignore Readonly",
         "description": "Ignore Readonly",
         "type": "check",
         "default": false
       },
-      "java.outport": {
+      "gxmi.outport": {
         "text": "XMI Outporter",
         "type": "section"
+      },
+      "gxmi.general": {
+        "text": "Add Function",
+        "type": "section"
+      },
+      "gxmi.general.debug": {
+        "text": "Debug General",
+        "description": "Debug General",
+        "type": "check",
+        "default": false
       }
     }
   }

@@ -27,6 +27,11 @@
           "label": "Forward",
           "id": "xmi:navigate.forward",
           "command": "xmi:navigate.forward"
+        },
+        {
+          "label": "Clean History",
+          "id": "xmi:navigate.clean",
+          "command": "xmi:navigate.clean"
         }
       ]
     }

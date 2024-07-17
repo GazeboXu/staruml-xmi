@@ -554,17 +554,17 @@ reader.elements['uml:Association'] = function (node) {
   // }
   // gazebo handle navigable of association
   // !no aggregation switch
-  if (app.preferences.get("java.import.association.ignore-name")) {
+  if (app.preferences.get("gxmi.import.association.ignore-name")) {
     delete json["name"]
   }
   _ends.forEach(function(end) {
-    if (app.preferences.get("java.import.association.ignore-dummy-role-name")) {
+    if (app.preferences.get("gxmi.import.association.ignore-dummy-role-name")) {
       delete end["name"]
     }
-    if (app.preferences.get("java.import.association.ignore-ordered")) {
+    if (app.preferences.get("gxmi.import.association.ignore-ordered")) {
       delete end["isOrdered"]
     }
-    if (app.preferences.get("java.import.association.ignore-readonly")) {
+    if (app.preferences.get("gxmi.import.association.ignore-readonly")) {
       delete end["isReadOnly"]
     }
   })
@@ -1356,11 +1356,11 @@ reader.postprocessors.push(function (elem) {
     } else if (!end1 && end2) {
       elem.end2.navigable = true
     }
-    if (app.preferences.get("java.import.ignore-ordered")) {
+    if (app.preferences.get("gxmi.import.ignore-ordered")) {
       delete elem.end1["isOrdered"]
       delete elem.end2["isOrdered"]
     }
-    if (app.preferences.get("java.import.ignore-readonly")) {
+    if (app.preferences.get("gxmi.import.ignore-readonly")) {
       delete elem.end1["isReadOnly"]
       delete elem.end2["isReadOnly"]
     }
