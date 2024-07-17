@@ -75,9 +75,13 @@ function init () {
     Object.getPrototypeOf(app.diagrams).setCurrentDiagram = setCurrentDiagram;
 }
 
+function getCurrentDiagramId() {
+    return diagramIndex >= 0 && diagramHistory[diagramIndex] ? diagramHistory[diagramIndex]._id : ""
+}
+
 function setCurrentDiagram(diagram, skipEvent) {
     oldSetCurrentDiagram.call(app.diagrams, diagram, skipEvent);
-    if (diagram) {
+    if (diagram && getCurrentDiagramId() != diagram._id) {
         diagramIndex++;
         if (!(diagramHistory.length > diagramIndex && diagramHistory[diagramIndex]._id == diagram._id)) { // 如果与历史相同
             if (diagramIndex > 0) {
