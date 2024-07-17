@@ -1,0 +1,4 @@
+{
+    "ctrl-minus": "xmi:navigate.back",
+    "ctrl-shift-minus": "xmi:navigate.forward"
+  }

@@ -26,6 +26,9 @@ const xmi21writer = require('./xmi21-writer')
 require('./uml2-import')
 require('./uml2-export')
 
+// gazebo
+const add = require('./add.js')
+
 const XMI_FILE_FILTERS = [
   {name: 'XMI Files', extensions: ['xmi']},
   {name: 'All Files', extensions: ['*']}
@@ -64,6 +67,8 @@ function _handleXMI21Export (fullPath) {
 function init () {
   app.commands.register('xmi:import', _handleXMI21Import)
   app.commands.register('xmi:export', _handleXMI21Export)
+
+  add.init()
 }
 
 exports.init = init

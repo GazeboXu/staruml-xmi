@@ -16,5 +16,8 @@
   "license": "MIT",
   "engines": {
     "staruml": ">=3.0.0"
+  },
+  "dependencies": {
+    "fuse.js": "^7.0.0"
   }
 }

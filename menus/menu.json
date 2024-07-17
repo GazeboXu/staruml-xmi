@@ -13,6 +13,31 @@
         { "type": "separator" },
         { "label": "XMI Export (v2.1)...", "id": "file.import.xmi.export", "command": "xmi:export" }
       ]
+    },
+    {
+      "id": "xmi:navigate",
+      "label": "Navigation",
+      "submenu": [
+        {
+          "label": "Back",
+          "id": "xmi:navigate.back",
+          "command": "xmi:navigate.back"
+        },
+        {
+          "label": "Forward",
+          "id": "xmi:navigate.forward",
+          "command": "xmi:navigate.forward"
+        }
+      ]
     }
-  ]
+  ],
+  "context-menu": {
+    "#working-diagrams ul.listview": [
+      {
+        "label": "Select In Explorer",
+        "id": "xmi:diagram.select-in-explorer",
+        "command": "xmi:diagram.select-in-explorer"
+      }
+    ]
+  }
 }
