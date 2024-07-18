@@ -7,11 +7,12 @@ const Fuse = require('fuse.js')
 
 var oldSearch;
 var oldSetCurrentDiagram;
+var old_toDataItem;
 
 var diagramHistory = [];
 var diagramIndex = -1;
 
-async function _handleSelectDiagramInExplorer () {
+async function _handleSelectDiagramInExplorer() {
     app.modelExplorer.select(app.diagrams.getCurrentDiagram(), true);
 }
 
@@ -24,8 +25,8 @@ function changeNavigateMenuState() {
 
     if (app.preferences.get("gxmi.general.debug")) {
         console.log('diagramIndex=', diagramIndex);
-        for (let i=0; i<diagramHistory.length; i++) {
-            console.log(`${i == diagramIndex ? '->\t': '\t'}${i}:${diagramHistory[i].name}:${diagramHistory[i]._id}`)
+        for (let i = 0; i < diagramHistory.length; i++) {
+            console.log(`${i == diagramIndex ? '->\t' : '\t'}${i}:${diagramHistory[i].name}:${diagramHistory[i]._id}`)
         }
     }
 }
@@ -62,7 +63,7 @@ function _handleNavigateClean() {
     changeNavigateMenuState();
 }
 
-function init () {
+function init() {
     app.commands.register('xmi:diagram.select-in-explorer', _handleSelectDiagramInExplorer)
     app.commands.register('xmi:navigate.back', _handleNavigateBack)
     app.commands.register('xmi:navigate.forward', _handleNavigateForward)
@@ -73,6 +74,9 @@ function init () {
 
     oldSetCurrentDiagram = Object.getPrototypeOf(app.diagrams).setCurrentDiagram;
     Object.getPrototypeOf(app.diagrams).setCurrentDiagram = setCurrentDiagram;
+
+    old_toDataItem = Object.getPrototypeOf(app.elementListPickerDialog)._toDataItem;
+    Object.getPrototypeOf(app.elementListPickerDialog)._toDataItem = _toDataItem;
 }
 
 function getCurrentDiagramId() {
@@ -84,7 +88,7 @@ function setCurrentDiagram(diagram, skipEvent) {
     if (diagram && getCurrentDiagramId() != diagram._id) {
         if (diagramHistory.length > diagramIndex + 1 && diagramHistory[diagramIndex + 1]._id == diagram._id) {// same as forward
             diagramIndex++;
-        } else if ( diagramIndex > 0 && diagramHistory[diagramIndex - 1]._id == diagram._id) { // same as back
+        } else if (diagramIndex > 0 && diagramHistory[diagramIndex - 1]._id == diagram._id) { // same as back
             diagramIndex--;
         } else {
             diagramIndex++;
@@ -101,16 +105,27 @@ function searchPrioritized(keyword, typeFilter) {
     keyword = keyword.toLowerCase();
     typeFilter = typeFilter || type.Element;
     var results = this.findAll((elem) => {
-      var name = elem.name ? elem.name.toLowerCase() : '';
-      return name.indexOf(keyword) > -1 && elem instanceof typeFilter;
+        var name = elem.name ? elem.name.toLowerCase() : '';
+        return name.indexOf(keyword) > -1 && elem instanceof typeFilter;
     });
     const fuse = new Fuse(results, {
-      keys: ['name'],
-      includeScore: true,
-      threshold: 0.5
+        keys: ['name'],
+        includeScore: true,
+        threshold: 0.5
     });
     results = fuse.search(keyword);
     return results.map(item => item.item);
-  }
+}
+
+function _toDataItem(elem) {
+    let item = old_toDataItem.call(app.elementListPickerDialog, elem);
+    var models = app.selections.getSelectedModels();
+    if (models.length > 0) {
+        if (models[0]._parent._id == elem._parent._id) {
+            item.text = `->${item.text}`;
+        }
+    }
+    return item;
+}
 
 exports.init = init;

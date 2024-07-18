@@ -1,5 +1,11 @@
 # XMI extension changelog
 
+## 18/07/2024
+
+### Changes
+
+- hint main diagram(the diagram located in the same package as element) in elementListPickerDialog
+
 ## 17/07/2024
 
 ### Changes
