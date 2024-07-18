@@ -8,6 +8,7 @@ const Fuse = require('fuse.js')
 var oldSearch;
 var oldSetCurrentDiagram;
 var old_toDataItem;
+var oldLoad;
 
 var diagramHistory = [];
 var diagramIndex = -1;
@@ -49,24 +50,25 @@ function getProject(element) {
 // when switching project, sometimes
 // extension should get notified when some events occurred
 // but due to staruml have same project id for all projects, this function only depends on project name
-function isValidDiagram(diagram) {
-    const diagramProject = getProject(diagram);
-    const appProject = app.project.getProject();
-    return diagramProject._id == appProject._id && diagramProject.name == appProject.name;
-}
+// function isValidDiagram(diagram) {
+//     const diagramProject = getProject(diagram);
+//     const appProject = app.project.getProject();
+//     return diagramProject._id == appProject._id && diagramProject.name == appProject.name;
+// }
 
 function _handleNavigateBack() {
     if (isNavigateBackEnabled()) {
         diagramIndex--;
-        if( isValidDiagram(diagramHistory[diagramIndex])) {
-            // app.diagrams.openDiagram(diagramHistory[diagramIndex]);
-            oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
-        } else {
-            diagramHistory.splice(diagramIndex, 1);
-            if (diagramIndex >= diagramHistory.length) {
-                diagramIndex--;
-            }
-        }
+        // if( isValidDiagram(diagramHistory[diagramIndex])) {
+        //     // app.diagrams.openDiagram(diagramHistory[diagramIndex]);
+        //     oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
+        // } else {
+        //     diagramHistory.splice(diagramIndex, 1);
+        //     if (diagramIndex >= diagramHistory.length) {
+        //         diagramIndex--;
+        //     }
+        // }
+        oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
         changeNavigateMenuState();
     }
 }
@@ -108,6 +110,9 @@ function init() {
 
     old_toDataItem = Object.getPrototypeOf(app.elementListPickerDialog)._toDataItem;
     Object.getPrototypeOf(app.elementListPickerDialog)._toDataItem = _toDataItem;
+
+    oldLoad = Object.getPrototypeOf(app.project).load;
+    Object.getPrototypeOf(app.project).load = load;
 }
 
 function getCurrentDiagramId() {
@@ -157,6 +162,11 @@ function _toDataItem(elem) {
         }
     }
     return item;
+}
+
+function load(fullpath) {
+    _handleNavigateClean();
+    oldLoad.call(app.project, fullpath);
 }
 
 exports.init = init;
