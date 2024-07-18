@@ -25,7 +25,7 @@ function changeNavigateMenuState() {
     if (app.preferences.get("gxmi.general.debug")) {
         console.log('diagramIndex=', diagramIndex);
         for (let i=0; i<diagramHistory.length; i++) {
-            console.log(`${i == diagramIndex ? '->': ''}${diagramHistory[i].name}`)
+            console.log(`${i == diagramIndex ? '->\t': '\t'}${i}:${diagramHistory[i].name}:${diagramHistory[i]._id}`)
         }
     }
 }
@@ -37,7 +37,7 @@ function isNavigateBackEnabled() {
 function _handleNavigateBack() {
     if (isNavigateBackEnabled()) {
         diagramIndex--;
-        app.diagrams.openDiagram(diagramHistory[diagramIndex]);
+        // app.diagrams.openDiagram(diagramHistory[diagramIndex]);
         oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
         changeNavigateMenuState();
     }
@@ -50,7 +50,7 @@ function isNavigateForwardEnabled() {
 function _handleNavigateForward() {
     if (isNavigateForwardEnabled()) {
         diagramIndex++;
-        app.diagrams.openDiagram(diagramHistory[diagramIndex]);
+        // app.diagrams.openDiagram(diagramHistory[diagramIndex]);
         oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
         changeNavigateMenuState();
     }
@@ -82,8 +82,12 @@ function getCurrentDiagramId() {
 function setCurrentDiagram(diagram, skipEvent) {
     oldSetCurrentDiagram.call(app.diagrams, diagram, skipEvent);
     if (diagram && getCurrentDiagramId() != diagram._id) {
-        diagramIndex++;
-        if (!(diagramHistory.length > diagramIndex && diagramHistory[diagramIndex]._id == diagram._id)) { // 如果与历史相同
+        if (diagramHistory.length > diagramIndex + 1 && diagramHistory[diagramIndex + 1]._id == diagram._id) {// same as forward
+            diagramIndex++;
+        } else if ( diagramIndex > 0 && diagramHistory[diagramIndex - 1]._id == diagram._id) { // same as back
+            diagramIndex--;
+        } else {
+            diagramIndex++;
             if (diagramIndex > 0) {
                 diagramHistory = diagramHistory.slice(0, diagramIndex)
             }
