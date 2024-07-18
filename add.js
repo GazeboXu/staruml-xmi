@@ -35,11 +35,38 @@ function isNavigateBackEnabled() {
     return diagramIndex >= 1;
 }
 
+function getProject(element) {
+    if (element) {
+        while (element._parent) {
+            element = element._parent;
+        }
+    } else {
+        element = {}
+    }
+    return element;
+}
+
+// when switching project, sometimes
+// extension should get notified when some events occurred
+// but due to staruml have same project id for all projects, this function only depends on project name
+function isValidDiagram(diagram) {
+    const diagramProject = getProject(diagram);
+    const appProject = app.project.getProject();
+    return diagramProject._id == appProject._id && diagramProject.name == appProject.name;
+}
+
 function _handleNavigateBack() {
     if (isNavigateBackEnabled()) {
         diagramIndex--;
-        // app.diagrams.openDiagram(diagramHistory[diagramIndex]);
-        oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
+        if( isValidDiagram(diagramHistory[diagramIndex])) {
+            // app.diagrams.openDiagram(diagramHistory[diagramIndex]);
+            oldSetCurrentDiagram.call(app.diagrams, diagramHistory[diagramIndex], false);
+        } else {
+            diagramHistory.splice(diagramIndex, 1);
+            if (diagramIndex >= diagramHistory.length) {
+                diagramIndex--;
+            }
+        }
         changeNavigateMenuState();
     }
 }
@@ -64,7 +91,11 @@ function _handleNavigateClean() {
 }
 
 function init() {
-    app.commands.register('xmi:diagram.select-in-explorer', _handleSelectDiagramInExplorer)
+    if (app.preferences.get("gxmi.general.debug")) {
+        console.log("gXMI:add init");
+    }
+
+    app.commands.register('xmi:diagram.select-in-explorer', _handleSelectDiagramInExplorer, "Diagram: Select In Explorer")
     app.commands.register('xmi:navigate.back', _handleNavigateBack)
     app.commands.register('xmi:navigate.forward', _handleNavigateForward)
     app.commands.register('xmi:navigate.clean', _handleNavigateClean)
